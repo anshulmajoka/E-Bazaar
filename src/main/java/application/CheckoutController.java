@@ -1,41 +1,22 @@
 package application;
 
-import java.awt.Component;
-import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.IOException;
-import java.util.List;
-import java.util.logging.Logger;
-
-import javax.swing.JInternalFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
-
-import middleware.DatabaseException;
-import middleware.EBazaarException;
-import application.gui.CartItemsWindow;
-import application.gui.CustomTableModel;
-import application.gui.DefaultData;
-import application.gui.EbazaarMainFrame;
-import application.gui.FinalOrderWindow;
-import application.gui.PaymentWindow;
-import application.gui.ShipAddressesWindow;
-import application.gui.ShippingBillingWindow;
-import application.gui.TermsWindow;
+import application.gui.*;
 import business.ParseException;
 import business.RuleException;
 import business.SessionContext;
-import business.externalinterfaces.CustomerConstants;
-import business.externalinterfaces.IAddress;
-import business.externalinterfaces.ICreditCard;
-import business.externalinterfaces.ICustomerProfile;
-import business.externalinterfaces.ICustomerSubsystem;
-import business.externalinterfaces.IShoppingCartSubsystem;
-import business.shoppingcartsubsystem.ShoppingCartSubsystemFacade;
+import business.customersubsystem.CustomerSubsystemFacade;
+import business.externalinterfaces.*;
 import business.util.CustomerUtil;
-import business.util.ShoppingCartUtil;
 import business.util.StringParse;
+import middleware.DatabaseException;
+import middleware.EBazaarException;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.List;
+import java.util.logging.Logger;
 
 public class CheckoutController implements CleanupControl {
 	private static final Logger LOG = Logger.getLogger(CheckoutController.class
@@ -90,8 +71,14 @@ public class CheckoutController implements CleanupControl {
 			 * defaultBillAddress.getCity(), defaultBillAddress.getState(),
 			 * defaultBillAddress.getZip());
 			 */
-			EbazaarMainFrame.getInstance().getDesktop()
-					.add(shippingBillingWindow);
+
+			ICustomerSubsystem customerSubsystemFacade = (CustomerSubsystemFacade)SessionContext.getInstance().get(CustomerConstants.CUSTOMER);
+			ICustomerProfile customerProfile = customerSubsystemFacade.getCustomerProfile();
+			IAddress defaultBillAddress = customerSubsystemFacade.getDefaultBillingAddress();
+			IAddress defaultShipAddress = customerSubsystemFacade.getDefaultShippingAddress();
+			shippingBillingWindow.setShippingAddress(customerProfile.getFirstName() + " " + customerProfile.getLastName(), defaultShipAddress.getStreet1(), defaultShipAddress.getCity(), defaultShipAddress.getState(), defaultShipAddress.getZip());
+			shippingBillingWindow.setBillingAddress(customerProfile.getFirstName() + " " + customerProfile.getLastName(), defaultBillAddress.getStreet1(), defaultBillAddress.getCity(), defaultBillAddress.getState(), defaultBillAddress.getZip());
+			EbazaarMainFrame.getInstance().getDesktop().add(shippingBillingWindow);
 			shippingBillingWindow.setVisible(true);
 		}
 
@@ -207,11 +194,11 @@ public class CheckoutController implements CleanupControl {
 
 		void setupPaymentWindow() {
 			// get default payment info from customer object
-			// ICreditCard cc = cust.getDefaultPaymentInfo();
-			// String[] ccAsArray = CustomerUtil.creditCardToStringArray(cc);
+			 ICreditCard cc = cust.getDefaultPaymentInfo();
+			 String[] ccAsArray = CustomerUtil.creditCardToStringArray(cc);
 
 			// fake data implementation
-			String[] ccAsArray = new String[] { "name", "num", "type", "expir" };
+			//String[] ccAsArray = new String[] { "name", "num", "type", "expir" };
 			paymentWindow = new PaymentWindow();
 			paymentWindow.setCredCardFields(ccAsArray[0], ccAsArray[1],
 					ccAsArray[2], ccAsArray[3]);

@@ -140,7 +140,6 @@ class DbClassProduct implements IDbClass {
 
 	private void populateProdList(ResultSet rs) throws DatabaseException {
 		productList = new LinkedList<IProductFromDb>();
-		/*
 		try {
 			IProductFromDb product = null;
 			Integer prodId = null;
@@ -164,7 +163,7 @@ class DbClassProduct implements IDbClass {
 			}
 		} catch (SQLException e) {
 			throw new DatabaseException(e);
-		} */
+		}
 	}
 
 	/**

@@ -12,12 +12,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JInternalFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import application.ApplicationCleanup;
 import application.BrowseAndSelectController;
@@ -114,7 +109,6 @@ public class QuantityWindow extends JInternalFrame {
                                  GuiUtil.QUANTITY_SCREEN_BGRND);
     }
     
-
     public String getQuantityDesired(){
         return (quantityField==null ? "1" : quantityField.getText());
     }
@@ -126,7 +120,6 @@ public class QuantityWindow extends JInternalFrame {
         return parent;
     }   
                     
-
     class CancelListener implements ActionListener {
         public void actionPerformed(ActionEvent evt) {
             setVisible(false);
@@ -145,3 +138,5 @@ public class QuantityWindow extends JInternalFrame {
 
 
 }
+
+// office char

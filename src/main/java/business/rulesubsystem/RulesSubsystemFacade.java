@@ -13,12 +13,12 @@ import business.externalinterfaces.IRulesSubsystem;
 import middleware.EBazaarException;
 
 public class RulesSubsystemFacade implements IRulesSubsystem {
-	
+
 	public void runRules(IRules rulesIface) throws EBazaarException,RuleException {
 		rulesIface.prepareData();
 		ReteWrapper wrapper = new ReteWrapper();
 		String nameOfRulesFile = rulesIface.getRulesFile();
-		File rulesFile =new File(nameOfRulesFile);
+		File rulesFile =new File("src\\main\\resources\\rules\\"+nameOfRulesFile);
 		
 		//String rulesAsString = readFile(nameOfRulesFile);
 		

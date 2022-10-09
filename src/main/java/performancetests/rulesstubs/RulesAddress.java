@@ -2,8 +2,6 @@ package performancetests.rulesstubs;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.util.HashMap;
 
 import middleware.EBazaarException;
@@ -18,7 +16,7 @@ import business.rulesubsystem.RulesSubsystemFacade;
 
 public class RulesAddress implements IRules {
 	private final String MODULE_NAME = "rules-address";
-	private final String RULES_FILE = "address-rules.clp";
+	private final String RULES_FILE = "rules/address-rules.clp";
 	private final String DEFTEMPLATE_NAME = "address-template";
 	private HashMap<String,DynamicBean> table;
 	private DynamicBean bean;

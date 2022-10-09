@@ -8,6 +8,7 @@ import java.awt.Window;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import javax.swing.JButton;
 import javax.swing.JInternalFrame;
@@ -18,6 +19,8 @@ import javax.swing.JTable;
 
 import application.BrowseAndSelectController;
 import application.GuiUtil;
+import business.externalinterfaces.IProductFromDb;
+import business.productsubsystem.ProductSubsystemFacade;
 
 
 /**
@@ -183,11 +186,14 @@ public class ProductListWindow extends JInternalFrame implements ParentWindow {
 	 * the controller class.
 	 */
 	private void updateModel() {
-		List<String[]> theData = new ArrayList<String[]>();
-        if(USE_DEFAULT_DATA) {
-			DefaultData dd = DefaultData.getInstance();
-			theData = dd.getCatalogWindowData(catalogType);
-        }
+//		List<String[]> theData = new ArrayList<String[]>();
+		ProductSubsystemFacade productSubsystemFacade = new ProductSubsystemFacade();
+		List<IProductFromDb> iProductFromDbList = productSubsystemFacade.getProductList(this.catalogType);
+//        if(USE_DEFAULT_DATA) {
+//			DefaultData dd = DefaultData.getInstance();
+//			theData = dd.getCatalogWindowData(catalogType);
+//        }
+		List<String[]> theData = iProductFromDbList.stream().map(p->new String[]{p.getProductName()}).collect(Collectors.toList());
 		updateModel(theData);
  	}		
 	

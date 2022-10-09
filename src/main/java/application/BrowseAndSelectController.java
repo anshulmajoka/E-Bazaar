@@ -1,48 +1,21 @@
 package application;
 
-import java.awt.Window;
+import application.gui.*;
+import business.*;
+import business.externalinterfaces.*;
+import business.productsubsystem.ProductSubsystemFacade;
+import business.shoppingcartsubsystem.RulesShoppingCart;
+import business.shoppingcartsubsystem.ShoppingCartSubsystemFacade;
+import middleware.DatabaseException;
+import middleware.EBazaarException;
+
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
-
-import javax.swing.JInternalFrame;
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
-
-import business.Quantity;
-import business.RuleException;
-import business.RulesQuantity;
-import business.SessionContext;
-
-import business.externalinterfaces.CustomerConstants;
-import business.externalinterfaces.ICartItem;
-import business.externalinterfaces.ICustomerSubsystem;
-import business.externalinterfaces.IProductFromDb;
-import business.externalinterfaces.IProductSubsystem;
-import business.externalinterfaces.IRules;
-import business.externalinterfaces.IShoppingCart;
-import business.externalinterfaces.IShoppingCartSubsystem;
-import business.productsubsystem.ProductSubsystemFacade;
-import business.shoppingcartsubsystem.ShoppingCartSubsystemFacade;
-import business.util.ProductUtil;
-import business.util.ShoppingCartUtil;
-import business.util.StringParse;
-
-import middleware.DatabaseException;
-import middleware.EBazaarException;
-
-import application.gui.CartItemsWindow;
-import application.gui.CatalogListWindow;
-import application.gui.DefaultData;
-import application.gui.EbazaarMainFrame;
-import application.gui.MaintainCatalogTypes;
-import application.gui.MaintainProductCatalog;
-import application.gui.ProductDetailsWindow;
-import application.gui.ProductListWindow;
-import application.gui.QuantityWindow;
-import application.gui.SelectOrderWindow;
 
 public class BrowseAndSelectController implements CleanupControl {
 	private static final Logger LOG = Logger
@@ -50,7 +23,7 @@ public class BrowseAndSelectController implements CleanupControl {
 
 	// ///////// EVENT HANDLERS -- new code goes here ////////////
 
-	//Online Purchase Menu
+	//Online Purchase Menue
 	// control of mainFrame
 	class PurchaseOnlineActionListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
@@ -187,24 +160,41 @@ public class BrowseAndSelectController implements CleanupControl {
 	class QuantityOkListener implements ActionListener {
 
 		public void actionPerformed(ActionEvent evt) {
-			//insert rules
-        	//gather quantity data 
-        	//   ... read quantity requested from window
-        	//           --create instance of Quantity
-        	//   ... read quantity avail from database
-        	//           -- uses DbClassQuantity
-        	//              use populateEntity of DbClassQuantity
-        	//              to populate the value quantityAvail
-        	//              in Quantity
-        	//
-        	//IRules rules = new RulesQuantity(quantity);
-        	//rules.runRules();
-			quantityWindow.dispose();
-			cartItemsWindow = new CartItemsWindow();
-			EbazaarMainFrame.getInstance().getDesktop()
-					.add(cartItemsWindow);
-			cartItemsWindow.setVisible(true);
+			String productSelection = productDetailsWindow.getItem();
+			String quantityDesired = quantityWindow.getQuantityDesired();
+
+			DbClassQuantity dbq = new DbClassQuantity();
+			Quantity qty = new Quantity(quantityDesired);
+			dbq.setQuantity(qty);
+			try {
+				dbq.readQuantityAvail(productSelection);
+				System.out.println(qty.getQuantityAvailable());
+			}catch(DatabaseException e){
+				e.printStackTrace();
+			}
+
+			boolean rulesOk = true;
+			IRules rules = new RulesQuantity(qty);
+			try {
+				rules.runRules();
+			} catch (EBazaarException e) {
+				rulesOk = false;
+				String message = e.getMessage();
+				System.out.println(message);
+				displayError(quantityWindow, message);
+			}
+
+			if (rulesOk) {
+				quantityWindow.dispose();
+				cartItemsWindow = new CartItemsWindow();
+				EbazaarMainFrame.getInstance().getDesktop().add(cartItemsWindow);
+				cartItemsWindow.setVisible(true);
+			}
 		}
+	}
+
+	void displayError(Component w, String msg) {
+		JOptionPane.showMessageDialog(w, msg, "Error", JOptionPane.ERROR_MESSAGE);
 	}
 
 	class BackToProductListListener implements ActionListener {
@@ -257,7 +247,42 @@ public class BrowseAndSelectController implements CleanupControl {
 			// not-so-far-saved cart items
 			// postcondition: the live cart has a cartid
 			// and all cart items are flagged as "hasBeenSaved"
+			SessionContext context = SessionContext.getInstance();
+			Boolean loggedIn = (Boolean) context.get(CustomerConstants.LOGGED_IN);
+			if (!loggedIn.booleanValue()) {
+				LoginControl loginControl = new LoginControl(cartItemsWindow, mainFrame);
+				loginControl.startLogin();
+			} else {
+				updateCart();
+			}
+		}
 
+		public void updateCart(){
+			SessionContext context = SessionContext.getInstance();
+			ICustomerSubsystem customer = (ICustomerSubsystem) context.get(CustomerConstants.CUSTOMER);
+			ICustomerProfile profile = customer.getCustomerProfile();
+
+			IShoppingCartSubsystem shoppingCartSubsystem = ShoppingCartSubsystemFacade.getInstance();
+			shoppingCartSubsystem.setCustomerProfile(profile);
+
+			IShoppingCart currentCart = shoppingCartSubsystem.getLiveCart();
+
+			boolean error = false;
+			IRules rulesShoppingCart = new RulesShoppingCart(currentCart);
+			try {
+				rulesShoppingCart.runRules();
+			} catch (RuleException ruleException) {
+				JOptionPane.showMessageDialog(quantityWindow, ruleException.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				error = true;
+			} catch (EBazaarException eBazaarException) {
+				JOptionPane.showMessageDialog(quantityWindow, eBazaarException.getMessage(), "Error",						JOptionPane.ERROR_MESSAGE);
+				error = true;
+			}
+			if (error == false){
+				shoppingCartSubsystem.saveLiveCart();
+			}
+
+			JOptionPane.showMessageDialog(cartItemsWindow, "Cart Save Success", "Message", JOptionPane.PLAIN_MESSAGE);
 		}
 	}
 

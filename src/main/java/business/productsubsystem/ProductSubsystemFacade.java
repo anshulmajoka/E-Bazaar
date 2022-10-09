@@ -33,11 +33,14 @@ public class ProductSubsystemFacade implements IProductSubsystem {
 	
 	//This is needed by ComboListener in ManageProductsController. When you have implemented this,
 	//you can remove comments from body of ComboListener.
-	public List<IProductFromDb> getProductList(String catType) throws DatabaseException {
-		//IMPLEMENT
-		IProductFromDb prod =  new Product(1, "coat", "hi", "joe", "tom", 2, "other");
+	public List<IProductFromDb> getProductList(String catType) {
 		List<IProductFromDb> list = new ArrayList<IProductFromDb>();
-		list.add(prod);
+		DbClassProduct dbClassProduct = new DbClassProduct();
+		try {
+			list = dbClassProduct.readProductList(getCatalogIdFromType(catType));
+		} catch (DatabaseException e) {
+			e.printStackTrace();
+		}
 		return list;
 	}
 
